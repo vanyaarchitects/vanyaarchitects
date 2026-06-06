@@ -4,8 +4,7 @@ import React, { useEffect, useState } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 
 export default function CustomCursor() {
-  const [hoverState, setHoverState] = useState<"default" | "hover" | "view">("default");
-  const [cursorText, setCursorText] = useState("");
+  const [hoverState, setHoverState] = useState<"default" | "hover">("default");
   const [isVisible, setIsVisible] = useState(false);
 
   const cursorX = useMotionValue(-100);
@@ -51,18 +50,11 @@ export default function CustomCursor() {
       
       interactiveElements.forEach((el) => {
         const handleMouseEnter = () => {
-          const type = el.getAttribute("data-cursor");
-          if (type === "view") {
-            setHoverState("view");
-            setCursorText("VIEW");
-          } else {
-            setHoverState("hover");
-          }
+          setHoverState("hover");
         };
 
         const handleMouseLeave = () => {
           setHoverState("default");
-          setCursorText("");
         };
 
         el.addEventListener("mouseenter", handleMouseEnter);
@@ -91,20 +83,17 @@ export default function CustomCursor() {
     <>
       {/* Outer Spring Ring */}
       <motion.div
-        className="fixed top-0 left-0 w-8 h-8 rounded-full border border-accent pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center justify-center text-[9px] font-sans font-bold tracking-[0.15em] text-accent bg-transparent"
+        className="fixed top-0 left-0 w-8 h-8 rounded-full border border-accent pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 hidden md:block bg-transparent"
         style={{
           x: cursorXSpring,
           y: cursorYSpring,
         }}
         animate={{
-          scale: hoverState === "hover" ? 1.4 : hoverState === "view" ? 2.2 : 1,
-          backgroundColor: hoverState === "view" ? "rgba(176, 141, 87, 0.15)" : "rgba(176, 141, 87, 0)",
+          scale: hoverState === "hover" ? 1.6 : 1,
           borderColor: hoverState === "hover" ? "rgba(176, 141, 87, 0.95)" : "rgba(176, 141, 87, 0.45)",
         }}
         transition={{ type: "spring", stiffness: 350, damping: 25 }}
-      >
-        {cursorText}
-      </motion.div>
+      />
 
       {/* Inner Pin Dot */}
       <motion.div
@@ -114,7 +103,7 @@ export default function CustomCursor() {
           y: cursorY,
         }}
         animate={{
-          scale: hoverState === "hover" ? 0 : hoverState === "view" ? 0 : 1,
+          scale: hoverState === "hover" ? 0 : 1,
         }}
         transition={{ duration: 0.12 }}
       />
