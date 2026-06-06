@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Phone, MapPin, Clock, ChevronDown, CheckCircle } from "lucide-react";
+import { insertDbLead } from "@/lib/supabase";
 
 // Project Types for dropdown
 const projectTypes = [
@@ -50,8 +51,20 @@ export default function ContactPage() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await insertDbLead({
+        name: formState.name,
+        email: formState.email,
+        phone: formState.phone,
+        projectType: formState.projectType,
+        message: formState.message,
+      });
+    } catch (err) {
+      console.error("Error logging enquiry to database:", err);
+    }
+
     setIsSubmitted(true);
     setTimeout(() => {
       setIsSubmitted(false);

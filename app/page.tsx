@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronRight, Compass, Eye, Shield, Leaf } from "lucide-react";
-import { projects } from "@/data/projects";
+import { projects as staticProjects, Project } from "@/data/projects";
+import { getDbProjects } from "@/lib/supabase";
 
 // Services Data
 const services = [
@@ -70,7 +71,14 @@ export default function HomePage() {
   const [frame, setFrame] = useState(1);
   const [maxFrame, setMaxFrame] = useState(1);
   const [isPreloaded, setIsPreloaded] = useState(false);
+  const [projectsList, setProjectsList] = useState<Project[]>(staticProjects);
   const totalFrames = 150;
+
+  useEffect(() => {
+    getDbProjects().then((data) => {
+      setProjectsList(data);
+    });
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;
@@ -127,7 +135,7 @@ export default function HomePage() {
   }, [isPreloaded, maxFrame]);
 
   // Take the first 4 projects for the Featured Projects section
-  const featuredProjects = projects.slice(0, 4);
+  const featuredProjects = projectsList.slice(0, 4);
 
   return (
     <div className="w-full">

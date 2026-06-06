@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 import { X, ArrowUpRight, Maximize2, Grid, List } from "lucide-react";
-import { projects, Project } from "@/data/projects";
+import { projects as staticProjects, Project } from "@/data/projects";
+import { getDbProjects } from "@/lib/supabase";
 
 const categories = ["All", "Residential", "Commercial", "Hospitality", "Institutional", "Urban Concepts"];
 
@@ -13,6 +14,7 @@ export default function ProjectsPage() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [hoveredProject, setHoveredProject] = useState<Project | null>(null);
+  const [projectsList, setProjectsList] = useState<Project[]>(staticProjects);
 
   // Motion values for cursor-following image reveal
   const listX = useMotionValue(0);
@@ -27,8 +29,14 @@ export default function ProjectsPage() {
     listY.set(e.clientY + 30);
   };
 
+  useEffect(() => {
+    getDbProjects().then((data) => {
+      setProjectsList(data);
+    });
+  }, []);
+
   // Filter projects based on selected category
-  const filteredProjects = projects.filter((project) => {
+  const filteredProjects = projectsList.filter((project) => {
     if (selectedCategory === "All") return true;
     // Handle plural mapping if category is named slightly differently
     if (selectedCategory === "Urban Concepts") return project.category === "Urban Concepts";
@@ -39,12 +47,12 @@ export default function ProjectsPage() {
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.hash) {
       const id = window.location.hash.substring(1);
-      const project = projects.find((p) => p.id === id);
+      const project = projectsList.find((p) => p.id === id);
       if (project) {
         setSelectedProject(project);
       }
     }
-  }, []);
+  }, [projectsList]);
 
   // Prevent scrolling when detail modal is open
   useEffect(() => {
