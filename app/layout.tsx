@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
 import JsonLd from "@/components/JsonLd";
+import CustomCursor from "@/components/CustomCursor";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -65,6 +66,7 @@ export default function RootLayout({
       className={`${montserrat.variable} ${cormorant.variable} ${inter.variable} h-full scroll-smooth antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <CustomCursor />
         <JsonLd />
         <Navbar />
         <main className="flex-grow">

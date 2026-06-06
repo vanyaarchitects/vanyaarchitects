@@ -299,7 +299,7 @@ export default function HomePage() {
                 transition={{ duration: 0.8, delay: idx * 0.1 }}
                 className="group cursor-pointer"
               >
-                <Link href={`/projects#${project.id}`}>
+                <Link href={`/projects#${project.id}`} data-cursor="view">
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-border mb-6">
                     <Image
                       src={project.heroImage}

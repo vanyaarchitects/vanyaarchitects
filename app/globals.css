@@ -78,3 +78,10 @@ body {
     gap: 2.5rem;
   }
 }
+
+/* Custom Cursor Hiding for desktop pointer devices */
+@media (pointer: fine) {
+  html, body, a, button, select, input, textarea, [role="button"], [data-cursor] {
+    cursor: none !important;
+  }
+}
