@@ -68,41 +68,63 @@ const coreStrengths = [
 export default function HomePage() {
   const [activeService, setActiveService] = useState<number | null>(0);
   const [frame, setFrame] = useState(1);
+  const [maxFrame, setMaxFrame] = useState(1);
   const [isPreloaded, setIsPreloaded] = useState(false);
   const totalFrames = 150;
 
   useEffect(() => {
-    let loadedCount = 0;
+    let isCancelled = false;
     const preloadImages: HTMLImageElement[] = [];
 
-    for (let i = 1; i <= totalFrames; i++) {
+    const loadFrame = (index: number) => {
+      if (isCancelled || index > totalFrames) return;
+
       const img = new window.Image();
-      img.src = `/Landing_animation/frame-${String(i).padStart(3, '0')}.jpg`;
+      img.src = `/Landing_animation/frame-${String(index).padStart(3, '0')}.jpg`;
+      
       img.onload = () => {
-        loadedCount++;
-        if (loadedCount === 30) {
+        if (isCancelled) return;
+        
+        // Start animation once the first 30 frames are ready
+        if (index === 30) {
           setIsPreloaded(true);
+          setMaxFrame(30);
+        } else if (index > 30) {
+          // Increment the loop limit progressively in batches of 10 to reduce re-renders
+          if (index % 10 === 0 || index === totalFrames) {
+            setMaxFrame(index);
+          }
         }
+        
+        loadFrame(index + 1);
       };
+      
+      img.onerror = () => {
+        if (isCancelled) return;
+        // Skip frame on load failure to prevent halting the queue
+        loadFrame(index + 1);
+      };
+      
       preloadImages.push(img);
-    }
+    };
 
-    const timeout = setTimeout(() => {
-      setIsPreloaded(true);
-    }, 2000);
+    // Begin sequential queue loading from frame 1
+    loadFrame(1);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     if (!isPreloaded) return;
 
     const interval = setInterval(() => {
-      setFrame((prev) => (prev % totalFrames) + 1);
-    }, 40); // 25 FPS
+      setFrame((prev) => (prev % maxFrame) + 1);
+    }, 40); // 25 FPS (40ms interval)
 
     return () => clearInterval(interval);
-  }, [isPreloaded]);
+  }, [isPreloaded, maxFrame]);
 
   // Take the first 4 projects for the Featured Projects section
   const featuredProjects = projects.slice(0, 4);
