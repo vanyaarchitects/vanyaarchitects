@@ -214,6 +214,7 @@ export default function ProjectsPage() {
                     onClick={() => setSelectedProject(project)}
                     onMouseEnter={() => setHoveredProject(project)}
                     onMouseLeave={() => setHoveredProject(null)}
+                    data-cursor="view"
                   >
                     <div className="flex items-center gap-8">
                       <span className="text-xs text-secondary font-mono tracking-widest group-hover:text-accent transition-colors">
