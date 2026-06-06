@@ -127,7 +127,7 @@ export default function ServicesPage() {
             Bespoke Architectural Engineering.
           </h1>
           <p className="text-xs sm:text-sm text-secondary font-light mt-8 leading-relaxed max-w-2xl text-justify-custom">
-            Architecture is a slow, thoughtful response to topography and culture. Our practice works at the intersection of Scandinavian minimalist layout and warm tropical luxury. We offer comprehensive design services, steering projects from early geographic site diagnostics through clear permit approvals and direct site masonry supervision.
+            Architecture is a slow, thoughtful response to topography and culture. Our practice works at the intersection of functional, thoughtful layout and warm tropical luxury. We offer comprehensive design services, steering projects from early geographic site diagnostics through clear permit approvals and direct site masonry supervision.
           </p>
         </div>
 

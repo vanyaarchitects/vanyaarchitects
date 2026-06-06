@@ -47,20 +47,20 @@ export default function AboutPage() {
               Our Story
             </h1>
             <p className="text-xs text-secondary mt-6 tracking-wider font-light leading-relaxed max-w-sm">
-              Founded on the belief that spaces should endure. We are a boutique team of architects, interior designers, and planners crafting custom architectures.
+              We believe every project is an opportunity to craft spaces that tell a story, celebrate identity, and shape sustainable legacies.
             </p>
           </div>
 
           {/* Core Story Content */}
           <div className="lg:col-span-7 space-y-6 text-secondary font-light text-sm md:text-base leading-relaxed">
             <p className="text-lg md:text-xl text-foreground/90 font-light italic">
-              “Vanya was born from a desire to strip away architectural noise and return to raw, honest material expressions.”
+              “At Vanya Architects, we believe and work to develop every project as an opportunity to craft spaces that tell a story, celebrate identity and shape sustainable legacies.”
             </p>
             <p className="text-justify-custom">
-              Established in Copenhagen, Denmark, and expanding with global design partnerships, Vanya is a boutique architecture and interior design studio. We work at the intersection of Scandinavian minimalist layout and warm, material luxury. We serve clients who value craftsmanship, ecological responsibility, and design clarity.
+              Founded with a passion for functional and thoughtful designs, we provide comprehensive solutions across Architecture, Urban Design, Interior Design, Landscape Design, Construction, Consultation and Art.
             </p>
             <p className="text-justify-custom">
-              Our projects range from private oceanfront retreats in Scandinavia and wood pavilions in Japan to corporate workspaces in Stockholm. Rather than applying a repetitive signature aesthetic, we explore the site, mapping solar paths, geological contours, and local cultural histories to compile a bespoke response.
+              From residential and commercial projects to urban interventions and landscape experiences, we integrate collaborative strategy, technical innovation and meticulous attention to deliver future-proof assets that honor the environment.
             </p>
           </div>
         </div>
@@ -198,7 +198,7 @@ export default function AboutPage() {
                 Ar. Vighnesh S V is the founding principal of VANYA Architecture. With credentials spanning B.Arch, M.Arch, and registration with the Associate of the Indian Institute of Architects (AIIA), Vighnesh directs the design direction of the studio.
               </p>
               <p className="text-justify-custom">
-                His practice combines rigorous tectonic detail, passive climate response, and a minimalist design vocabulary inspired by Scandinavian and warm luxury principles. He works personally with each client to steer projects from early volumetric concept sketches to final site craftsmanship.
+                His practice combines rigorous tectonic detail, passive climate response, and a minimalist design vocabulary inspired by functional, thoughtful, and warm luxury design principles. He works personally with each client to steer projects from early volumetric concept sketches to final site craftsmanship.
               </p>
             </div>
           </div>

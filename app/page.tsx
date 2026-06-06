@@ -248,7 +248,7 @@ export default function HomePage() {
                 “We do not construct modules of convenience. We sculpt permanent responses to the landscape, creating spatial thresholds where nature and human life exist in perpetual dialogue.”
               </p>
               <p className="text-justify-custom">
-                At Vanya, our practice is anchored in Scandinavian minimalism, tectonic integrity, and the emotional resonance of space. We believe that architecture holds the power to shape experience—that a perfectly placed skylight, the raw weight of cast concrete, or a transition from granite to oak can define a daily ritual.
+                At Vanya, our practice is anchored in functional and thoughtful design, tectonic integrity, and the emotional resonance of space. We believe that architecture holds the power to shape experience—that a perfectly placed skylight, the raw weight of cast concrete, or a transition from granite to oak can define a daily ritual.
               </p>
               <p className="text-justify-custom">
                 We select projects that invite critical design inquiry. Whether developing a luxury clifftop residence, a quiet corporate headquarters, or a self-sustaining urban concept, our team works with a select group of clients to transform requirements into structural works of art.

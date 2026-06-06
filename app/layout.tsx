@@ -32,12 +32,12 @@ export const metadata: Metadata = {
     default: "VANYA Architecture | Luxury Architecture Studio",
   },
   description:
-    "VANYA Architecture is a luxury architectural design studio creating spaces rooted in purpose, beauty, and timeless Scandinavian and warm minimalist craftsmanship.",
+    "VANYA Architecture is a luxury architectural design studio crafting spaces that tell a story, celebrate identity, and shape sustainable legacies through functional and thoughtful design.",
   metadataBase: new URL("https://vanyaarchitecture.com"),
   openGraph: {
     title: "VANYA Architecture | Luxury Architecture Studio",
     description:
-      "Creating spaces rooted in purpose, beauty, and timeless Scandinavian and warm minimalist craftsmanship.",
+      "Crafting spaces that tell a story, celebrate identity, and shape sustainable legacies through functional and thoughtful design.",
     url: "https://vanyaarchitecture.com",
     siteName: "VANYA Architecture",
     locale: "en_US",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "VANYA Architecture | Luxury Architecture Studio",
     description:
-      "Creating spaces rooted in purpose, beauty, and timeless Scandinavian and warm minimalist craftsmanship.",
+      "Crafting spaces that tell a story, celebrate identity, and shape sustainable legacies through functional and thoughtful design.",
   },
   robots: {
     index: true,
