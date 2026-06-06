@@ -1,26 +1,80 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F7F4EF;
+  --foreground: #1C1C1C;
+  --secondary: #6D6D6D;
+  --accent: #B08D57;
+  --dark-accent: #3E342C;
+  --border: #E4DDD2;
+  --card: #FFFFFF;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-dark-accent: var(--dark-accent);
+  --color-border: var(--border);
+  --color-card: var(--card);
+  
+  --font-logo: var(--font-montserrat);
+  --font-heading: var(--font-cormorant);
+  --font-sans: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-body {
+::-webkit-scrollbar-track {
   background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Base styles */
+body {
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), sans-serif;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Text selections */
+::selection {
+  background-color: var(--accent);
+  color: #FFFFFF;
+}
+
+/* Custom editorial Utilities */
+.text-justify-custom {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* Smooth layout reveals */
+.editorial-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .editorial-grid {
+    gap: 2.5rem;
+  }
 }
