@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
 import JsonLd from "@/components/JsonLd";
 import CustomCursor from "@/components/CustomCursor";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -73,6 +74,7 @@ export default function RootLayout({
           <PageTransition>{children}</PageTransition>
         </main>
         <Footer />
+        <WhatsAppButton />
       </body>
     </html>
   );
