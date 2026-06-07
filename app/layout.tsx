@@ -7,6 +7,7 @@ import PageTransition from "@/components/PageTransition";
 import JsonLd from "@/components/JsonLd";
 import CustomCursor from "@/components/CustomCursor";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { Analytics } from "@vercel/analytics/react";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -75,6 +76,7 @@ export default function RootLayout({
         </main>
         <Footer />
         <WhatsAppButton />
+        <Analytics />
       </body>
     </html>
   );
