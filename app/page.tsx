@@ -69,8 +69,9 @@ const coreStrengths = [
 export default function HomePage() {
   const [activeService, setActiveService] = useState<number | null>(0);
   const [frame, setFrame] = useState(1);
-  const [maxFrame, setMaxFrame] = useState(1);
-  const [isPreloaded, setIsPreloaded] = useState(false);
+  const [isPreloadComplete, setIsPreloadComplete] = useState(false);
+  const [loadedCount, setLoadedCount] = useState(0);
+  const [hasVisited, setHasVisited] = useState(false);
   const [projectsList, setProjectsList] = useState<Project[]>(staticProjects);
   const totalFrames = 152;
 
@@ -80,7 +81,20 @@ export default function HomePage() {
     });
   }, []);
 
+  // Bypass preloader if already visited in this session
   useEffect(() => {
+    const preloaded = sessionStorage.getItem("vanya_preloaded") === "true";
+    if (preloaded) {
+      setHasVisited(true);
+      setIsPreloadComplete(true);
+      setFrame(totalFrames);
+    }
+  }, []);
+
+  // Preload frames
+  useEffect(() => {
+    if (hasVisited) return;
+
     let isCancelled = false;
     const preloadImages: HTMLImageElement[] = [];
 
@@ -92,59 +106,95 @@ export default function HomePage() {
       
       img.onload = () => {
         if (isCancelled) return;
+        setLoadedCount(index);
         
-        // Start animation once the first 30 frames are ready
-        if (index === 30) {
-          setIsPreloaded(true);
-          setMaxFrame(30);
-        } else if (index > 30) {
-          // Increment the loop limit progressively in batches of 10 to reduce re-renders
-          if (index % 10 === 0 || index === totalFrames) {
-            setMaxFrame(index);
-          }
+        if (index === totalFrames) {
+          sessionStorage.setItem("vanya_preloaded", "true");
+          setTimeout(() => {
+            setIsPreloadComplete(true);
+          }, 500);
+        } else {
+          loadFrame(index + 1);
         }
-        
-        loadFrame(index + 1);
       };
       
       img.onerror = () => {
         if (isCancelled) return;
-        // Skip frame on load failure to prevent halting the queue
-        loadFrame(index + 1);
+        setLoadedCount(index);
+        if (index === totalFrames) {
+          sessionStorage.setItem("vanya_preloaded", "true");
+          setIsPreloadComplete(true);
+        } else {
+          loadFrame(index + 1);
+        }
       };
       
       preloadImages.push(img);
     };
 
-    // Begin sequential queue loading from frame 1
     loadFrame(1);
 
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [hasVisited]);
 
+  // Frame sequence playback (plays once, then stops at last frame)
   useEffect(() => {
-    if (!isPreloaded) return;
+    if (!isPreloadComplete || hasVisited) return;
 
     const interval = setInterval(() => {
       setFrame((prev) => {
-        if (prev >= totalFrames) {
-          clearInterval(interval);
-          return totalFrames;
-        }
-        if (prev < maxFrame) {
+        if (prev < totalFrames) {
           return prev + 1;
+        } else {
+          clearInterval(interval);
+          return prev;
         }
-        return prev;
       });
-    }, 40); // 25 FPS (40ms interval)
+    }, 40); // 25 FPS
 
     return () => clearInterval(interval);
-  }, [isPreloaded, maxFrame, totalFrames]);
+  }, [isPreloadComplete, hasVisited]);
 
   // Take the first 4 projects for the Featured Projects section
   const featuredProjects = projectsList.slice(0, 4);
+
+  if (!isPreloadComplete) {
+    const progress = Math.round((loadedCount / totalFrames) * 100);
+    return (
+      <div className="fixed inset-0 bg-[#1C1C1C] z-50 flex flex-col items-center justify-center text-white">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8 }}
+          className="text-center space-y-6"
+        >
+          {/* Logo */}
+          <div className="space-y-2">
+            <h2 className="font-heading text-4xl sm:text-5xl tracking-[0.2em] font-light">V Λ N Y Λ</h2>
+            <p className="text-[9px] text-[#B08D57] tracking-[0.3em] uppercase font-bold">Architects</p>
+          </div>
+
+          {/* Loading details */}
+          <div className="w-48 mx-auto space-y-3 pt-6">
+            {/* Elegant Line Progress */}
+            <div className="h-[1px] w-full bg-stone-800 relative overflow-hidden">
+              <div 
+                className="h-full bg-[#B08D57] transition-all duration-300 ease-out" 
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            {/* Percentage */}
+            <div className="flex justify-between items-center text-[9px] font-mono tracking-widest text-[#B08D57] font-semibold">
+              <span>INITIALIZING STUDY</span>
+              <span>{progress}%</span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
