@@ -128,11 +128,20 @@ export default function HomePage() {
     if (!isPreloaded) return;
 
     const interval = setInterval(() => {
-      setFrame((prev) => (prev % maxFrame) + 1);
+      setFrame((prev) => {
+        if (prev >= totalFrames) {
+          clearInterval(interval);
+          return totalFrames;
+        }
+        if (prev < maxFrame) {
+          return prev + 1;
+        }
+        return prev;
+      });
     }, 40); // 25 FPS (40ms interval)
 
     return () => clearInterval(interval);
-  }, [isPreloaded, maxFrame]);
+  }, [isPreloaded, maxFrame, totalFrames]);
 
   // Take the first 4 projects for the Featured Projects section
   const featuredProjects = projectsList.slice(0, 4);
