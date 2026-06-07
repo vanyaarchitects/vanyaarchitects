@@ -81,7 +81,14 @@ body {
 
 /* Custom Cursor Hiding for desktop pointer devices */
 @media (pointer: fine) {
-  html, body, a, button, select, input, textarea, [role="button"], [data-cursor] {
+  body.custom-cursor-active,
+  body.custom-cursor-active a,
+  body.custom-cursor-active button,
+  body.custom-cursor-active select,
+  body.custom-cursor-active input,
+  body.custom-cursor-active textarea,
+  body.custom-cursor-active [role="button"],
+  body.custom-cursor-active [data-cursor] {
     cursor: none !important;
   }
 }

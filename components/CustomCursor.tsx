@@ -79,6 +79,21 @@ export default function CustomCursor() {
     };
   }, []);
 
+  useEffect(() => {
+    const isPointerFine = window.matchMedia("(pointer: fine)").matches;
+    if (!isPointerFine) return;
+
+    if (pathname?.startsWith("/admin")) {
+      document.body.classList.remove("custom-cursor-active");
+    } else {
+      document.body.classList.add("custom-cursor-active");
+    }
+
+    return () => {
+      document.body.classList.remove("custom-cursor-active");
+    };
+  }, [pathname]);
+
   if (pathname?.startsWith("/admin") || !isVisible) return null;
 
   return (
