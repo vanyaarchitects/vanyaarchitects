@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -66,20 +66,13 @@ const coreStrengths = [
   },
 ];
 
-// Shared global state to bypass loading overlay on internal page navigation (client-side transitions)
-let globalPreloadComplete = false;
-
 export default function HomePage() {
   const [activeService, setActiveService] = useState<number | null>(0);
   const [frame, setFrame] = useState(1);
-  const [isPreloadComplete, setIsPreloadComplete] = useState(globalPreloadComplete);
-  const [loadedCount, setLoadedCount] = useState(0);
-  const [hasVisited, setHasVisited] = useState(globalPreloadComplete);
+  const [maxFrame, setMaxFrame] = useState(1);
+  const [isPreloaded, setIsPreloaded] = useState(false);
   const [projectsList, setProjectsList] = useState<Project[]>(staticProjects);
   const totalFrames = 152;
-
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imagesRef = useRef<HTMLImageElement[]>([]);
 
   useEffect(() => {
     getDbProjects().then((data) => {
@@ -87,210 +80,85 @@ export default function HomePage() {
     });
   }, []);
 
-  // Bypass preloader if already visited in this session (covers direct refreshes / F5)
   useEffect(() => {
-    const preloaded = sessionStorage.getItem("vanya_preloaded") === "true";
-    if (preloaded) {
-      setHasVisited(true);
-      setIsPreloadComplete(true);
-      globalPreloadComplete = true;
-      setFrame(totalFrames);
-    }
-  }, []);
-
-  // Preload frames in parallel for optimal bandwidth usage and zero buffering
-  useEffect(() => {
-    if (hasVisited) return;
-
     let isCancelled = false;
-    let completedCount = 0;
     const preloadImages: HTMLImageElement[] = [];
 
-    const handleFrameLoad = (index: number, imgElement: HTMLImageElement) => {
-      if (isCancelled) return;
-      completedCount++;
-      setLoadedCount(completedCount);
-      
-      // Cache the loaded HTMLImageElement in our ref array
-      imagesRef.current[index] = imgElement;
+    const loadFrame = (index: number) => {
+      if (isCancelled || index > totalFrames) return;
 
-      if (completedCount === totalFrames) {
-        sessionStorage.setItem("vanya_preloaded", "true");
-        globalPreloadComplete = true;
-        setTimeout(() => {
-          setIsPreloadComplete(true);
-        }, 500);
-      }
+      const img = new window.Image();
+      img.src = `/Landing_animation/frame-${String(index).padStart(3, '0')}.jpg`;
+      
+      img.onload = () => {
+        if (isCancelled) return;
+        
+        // Start animation once the first 30 frames are ready
+        if (index === 30) {
+          setIsPreloaded(true);
+          setMaxFrame(30);
+        } else if (index > 30) {
+          // Increment the loop limit progressively in batches of 10 to reduce re-renders
+          if (index % 10 === 0 || index === totalFrames) {
+            setMaxFrame(index);
+          }
+        }
+        
+        loadFrame(index + 1);
+      };
+      
+      img.onerror = () => {
+        if (isCancelled) return;
+        // Skip frame on load failure to prevent halting the queue
+        loadFrame(index + 1);
+      };
+      
+      preloadImages.push(img);
     };
 
-    for (let i = 1; i <= totalFrames; i++) {
-      const img = new window.Image();
-      img.src = `/Landing_animation/frame-${String(i).padStart(3, '0')}.jpg`;
-      img.onload = () => handleFrameLoad(i, img);
-      img.onerror = () => handleFrameLoad(i, img); // Continue loading even if a frame fails
-      preloadImages.push(img);
-    }
+    // Begin sequential queue loading from frame 1
+    loadFrame(1);
 
     return () => {
       isCancelled = true;
     };
-  }, [hasVisited]);
+  }, []);
 
-  // Frame sequence playback (plays once, then stops at last frame)
   useEffect(() => {
-    if (!isPreloadComplete || hasVisited) return;
+    if (!isPreloaded) return;
 
     const interval = setInterval(() => {
       setFrame((prev) => {
-        if (prev < totalFrames) {
+        if (prev < maxFrame) {
           return prev + 1;
-        } else {
+        } else if (prev >= totalFrames) {
           clearInterval(interval);
+          return prev;
+        } else {
           return prev;
         }
       });
-    }, 40); // 25 FPS
+    }, 40); // 25 FPS (40ms interval)
 
     return () => clearInterval(interval);
-  }, [isPreloadComplete, hasVisited]);
-
-  // Handle high-performance rendering of frame sequence to HTML5 Canvas
-  useEffect(() => {
-    // Canvas is only used for the animation playback phase
-    const showCanvas = !hasVisited && frame < totalFrames;
-    if (!showCanvas) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    let isCancelled = false;
-
-    const resizeAndDraw = () => {
-      if (isCancelled || !canvas) return;
-      const parent = canvas.parentElement;
-      if (!parent) return;
-
-      const rect = parent.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      
-      // Set canvas internal resolution based on device pixel ratio for crisp rendering
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      const img = imagesRef.current[frame];
-      if (img && img.complete) {
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const imgWidth = img.width;
-        const imgHeight = img.height;
-
-        const imgRatio = imgWidth / imgHeight;
-        const canvasRatio = canvasWidth / canvasHeight;
-
-        let drawWidth = canvasWidth;
-        let drawHeight = canvasHeight;
-        let drawX = 0;
-        let drawY = 0;
-
-        // Cover calculation (equivalent to CSS object-fit: cover)
-        if (imgRatio > canvasRatio) {
-          drawWidth = canvasHeight * imgRatio;
-          drawX = (canvasWidth - drawWidth) / 2;
-        } else {
-          drawHeight = canvasWidth / imgRatio;
-          drawY = (canvasHeight - drawHeight) / 2;
-        }
-
-        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
-      }
-    };
-
-    resizeAndDraw();
-    window.addEventListener("resize", resizeAndDraw);
-
-    return () => {
-      isCancelled = true;
-      window.removeEventListener("resize", resizeAndDraw);
-    };
-  }, [frame, hasVisited]);
+  }, [isPreloaded, maxFrame]);
 
   // Take the first 4 projects for the Featured Projects section
   const featuredProjects = projectsList.slice(0, 4);
 
-  const progress = Math.round((loadedCount / totalFrames) * 100);
-  const showCanvas = !hasVisited && frame < totalFrames;
-
   return (
-    <div className="w-full relative">
-      {/* Inline script to append .vanya-preloaded class to root HTML element BEFORE initial paint */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            if (sessionStorage.getItem("vanya_preloaded") === "true") {
-              document.documentElement.classList.add("vanya-preloaded");
-            }
-          `,
-        }}
-      />
-
-      {/* 0. PRELOADER OVERLAY */}
-      {!isPreloadComplete && (
-        <div className="preloader-overlay fixed inset-0 bg-[#1C1C1C] z-50 flex flex-col items-center justify-center text-white">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-            className="text-center space-y-6"
-          >
-            {/* Logo */}
-            <div className="space-y-2">
-              <h2 className="font-heading text-4xl sm:text-5xl tracking-[0.2em] font-light">V Λ N Y Λ</h2>
-              <p className="text-[9px] text-[#B08D57] tracking-[0.3em] uppercase font-bold">Architects</p>
-            </div>
-
-            {/* Loading details */}
-            <div className="w-48 mx-auto space-y-3 pt-6">
-              {/* Elegant Line Progress */}
-              <div className="h-[1px] w-full bg-stone-800 relative overflow-hidden">
-                <div 
-                  className="h-full bg-[#B08D57] transition-all duration-300 ease-out" 
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              {/* Percentage */}
-              <div className="flex justify-between items-center text-[9px] font-mono tracking-widest text-[#B08D57] font-semibold">
-                <span>INITIALIZING STUDY</span>
-                <span>{progress}%</span>
-              </div>
-            </div>
-          </motion.div>
+    <div className="w-full">
+      {/* 1. HERO SECTION */}
+      <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+        {/* Hero Background Image Sequence */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src={`/Landing_animation/frame-${String(frame).padStart(3, '0')}.jpg`}
+            alt="Vanya Luxury Architecture Hero Background"
+            className="w-full h-full object-cover scale-102 select-none"
+          />
+          <div className="absolute inset-0 bg-black/55" />
         </div>
-      )}
-
-      {/* Home Page Content */}
-      <div className="w-full">
-        {/* 1. HERO SECTION */}
-        <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-          {/* Hero Background */}
-          <div className="absolute inset-0 z-0">
-            {showCanvas ? (
-              <canvas
-                ref={canvasRef}
-                className="w-full h-full object-cover scale-102 select-none"
-              />
-            ) : (
-              <img
-                src="/Landing_animation/frame-152.jpg"
-                alt="Vanya Luxury Architecture Hero Background"
-                className="w-full h-full object-cover scale-102 select-none"
-              />
-            )}
-            <div className="absolute inset-0 bg-black/55" />
-          </div>
 
         {/* Custom Watermark SVG Overlay */}
         <div className="absolute inset-0 z-1 pointer-events-none flex items-center justify-center select-none overflow-hidden">
@@ -619,6 +487,5 @@ export default function HomePage() {
         </div>
       </section>
     </div>
-  </div>
   );
 }
