@@ -72,7 +72,7 @@ export default function HomePage() {
   const [maxFrame, setMaxFrame] = useState(1);
   const [isPreloaded, setIsPreloaded] = useState(false);
   const [projectsList, setProjectsList] = useState<Project[]>(staticProjects);
-  const totalFrames = 150;
+  const totalFrames = 152;
 
   useEffect(() => {
     getDbProjects().then((data) => {
