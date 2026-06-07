@@ -49,3 +49,10 @@ CREATE POLICY "Allow public insert of leads" ON leads
 -- 7. Enable All operations for Leads (so you can view/update status in Admin Panel)
 CREATE POLICY "Allow all operations for leads" ON leads
   FOR ALL USING (true);
+
+-- 8. Grant Table Permissions to API Roles (Resolves PostgreSQL Error 42501)
+GRANT ALL ON TABLE projects TO anon, authenticated, service_role;
+GRANT ALL ON TABLE leads TO anon, authenticated, service_role;
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
