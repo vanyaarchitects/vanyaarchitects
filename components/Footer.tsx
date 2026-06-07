@@ -47,7 +47,7 @@ export default function Footer() {
             </div>
             <div className="flex items-center space-x-6 mt-8">
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/vanyaarchitects/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#C4B7A9] hover:text-accent transition-colors duration-300"

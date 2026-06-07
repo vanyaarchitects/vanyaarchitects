@@ -25,7 +25,7 @@ export default function JsonLd() {
       "availableLanguage": ["English", "Malayalam", "Hindi"]
     },
     "sameAs": [
-      "https://instagram.com/vanyaarchitecture",
+      "https://www.instagram.com/vanyaarchitects/",
       "https://linkedin.com/company/vanyaarchitecture"
     ]
   };

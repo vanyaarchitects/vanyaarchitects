@@ -134,7 +134,9 @@ export default function ContactPage() {
                   <span className="text-accent mt-0.5"><Mail size={16} /></span>
                   <div>
                     <p className="font-semibold text-foreground uppercase tracking-widest text-[9px] mb-1">Email Inquiries</p>
-                    <p className="leading-relaxed">vanyaarchitects01@gmail.com</p>
+                    <a href="mailto:vanyaarchitects01@gmail.com" className="leading-relaxed hover:text-accent transition-colors block">
+                      vanyaarchitects01@gmail.com
+                    </a>
                   </div>
                 </div>
 
