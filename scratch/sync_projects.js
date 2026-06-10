@@ -1,16 +1,42 @@
-export interface Project {
-  id: string;
-  name: string;
-  category: "Residential" | "Commercial" | "Hospitality" | "Institutional" | "Urban Concepts";
-  location: string;
-  area: string;
-  year: string;
-  description: string;
-  heroImage: string;
-  gallery: string[];
+const fs = require("fs");
+const path = require("path");
+const { createClient } = require("@supabase/supabase-js");
+
+// Read .env.local
+const envPath = path.join(__dirname, "../.env.local");
+console.log("Reading environment configuration from:", envPath);
+
+if (!fs.existsSync(envPath)) {
+  console.error("ERROR: .env.local file not found. Make sure it exists in the workspace root.");
+  process.exit(1);
 }
 
-export const projects: Project[] = [
+const envContent = fs.readFileSync(envPath, "utf8");
+const envVars = {};
+envContent.split("\n").forEach((line) => {
+  const match = line.match(/^\s*([\w\.\-]+)\s*=\s*(.*)?\s*$/);
+  if (match) {
+    let key = match[1];
+    let value = match[2] || "";
+    // Remove quotes if present
+    if (value.length > 0 && value.charAt(0) === '"' && value.charAt(value.length - 1) === '"') {
+      value = value.substring(1, value.length - 1);
+    }
+    envVars[key] = value.trim();
+  }
+});
+
+const url = envVars.NEXT_PUBLIC_SUPABASE_URL;
+const key = envVars.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!url || !key) {
+  console.error("ERROR: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is missing in .env.local.");
+  process.exit(1);
+}
+
+const supabase = createClient(url, key);
+
+const projectsToSync = [
   {
     id: "villa-sands",
     name: "Villa Sands",
@@ -222,3 +248,46 @@ export const projects: Project[] = [
     ]
   }
 ];
+
+async function syncProjects() {
+  console.log("\n--- STARTING SUPABASE PORTFOLIO SYNCHRONIZATION ---");
+  console.log(`Preparing to upsert ${projectsToSync.length} projects...`);
+
+  let successCount = 0;
+  let errorCount = 0;
+
+  for (const project of projectsToSync) {
+    try {
+      console.log(`Syncing project: "${project.name}" (ID: ${project.id})...`);
+      const { data, error } = await supabase
+        .from("projects")
+        .upsert(project, { onConflict: "id" })
+        .select();
+
+      if (error) {
+        console.error(`❌ Error syncing "${project.name}":`, error.message);
+        errorCount++;
+      } else {
+        console.log(`✅ Successfully synced "${project.name}"`);
+        successCount++;
+      }
+    } catch (e) {
+      console.error(`❌ Unexpected error syncing "${project.name}":`, e.message || e);
+      errorCount++;
+    }
+  }
+
+  console.log("\n--- SYNCHRONIZATION SUMMARY ---");
+  console.log(`Total projects processed: ${projectsToSync.length}`);
+  console.log(`Successfully synced:      ${successCount}`);
+  console.log(`Failed to sync:           ${errorCount}`);
+  console.log("---------------------------------\n");
+
+  if (errorCount > 0) {
+    process.exit(1);
+  } else {
+    process.exit(0);
+  }
+}
+
+syncProjects();
