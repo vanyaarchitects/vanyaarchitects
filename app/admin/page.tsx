@@ -17,9 +17,10 @@ import {
   CheckCircle, 
   AlertCircle,
   FileText,
-  Clock
+  Clock,
+  Edit
 } from "lucide-react";
-import { getDbProjects, insertDbProject, deleteDbProject, getDbLeads, updateLeadStatus, isSupabaseConfigured, Lead } from "@/lib/supabase";
+import { getDbProjects, insertDbProject, updateDbProject, deleteDbProject, getDbLeads, updateLeadStatus, isSupabaseConfigured, Lead } from "@/lib/supabase";
 import { Project } from "@/data/projects";
 
 type Tab = "overview" | "projects" | "inquiries";
@@ -39,6 +40,8 @@ export default function AdminDashboard() {
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   
   const [newProject, setNewProject] = useState({
     id: "",
@@ -139,7 +142,7 @@ export default function AdminDashboard() {
         ? newProject.galleryUrls.split(",").map(url => url.trim()).filter(Boolean)
         : [newProject.heroImage]; // Default to heroImage if empty
 
-      await insertDbProject({
+      const projectData = {
         id: formattedId,
         name: newProject.name,
         category: newProject.category,
@@ -149,9 +152,16 @@ export default function AdminDashboard() {
         description: newProject.description,
         heroImage: newProject.heroImage,
         gallery: galleryArray,
-      });
+      };
 
-      setFormSuccess("Project successfully published to database!");
+      if (isEditing && editingProjectId) {
+        await updateDbProject(editingProjectId, projectData);
+        setFormSuccess("Project successfully updated in database!");
+      } else {
+        await insertDbProject(projectData);
+        setFormSuccess("Project successfully published to database!");
+      }
+
       setNewProject({
         id: "",
         name: "",
@@ -163,6 +173,8 @@ export default function AdminDashboard() {
         heroImage: "",
         galleryUrls: "",
       });
+      setIsEditing(false);
+      setEditingProjectId(null);
       
       // Reload lists
       loadDashboardData();
@@ -171,7 +183,7 @@ export default function AdminDashboard() {
         setFormSuccess("");
       }, 1500);
     } catch (err: any) {
-      setFormError(err.message || "An error occurred while creating project.");
+      setFormError(err.message || "An error occurred while saving project.");
     } finally {
       setIsSubmitting(false);
     }
@@ -401,7 +413,22 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex gap-4 mt-6">
                       <button 
-                        onClick={() => setShowAddModal(true)}
+                        onClick={() => {
+                          setNewProject({
+                            id: "",
+                            name: "",
+                            category: "Residential",
+                            location: "",
+                            area: "",
+                            year: "",
+                            description: "",
+                            heroImage: "",
+                            galleryUrls: "",
+                          });
+                          setIsEditing(false);
+                          setEditingProjectId(null);
+                          setShowAddModal(true);
+                        }}
                         className="text-xs bg-[#B08D57] hover:bg-[#B08D57]/90 text-white px-4 py-2 font-semibold flex items-center gap-1.5 cursor-pointer"
                       >
                         <Plus size={14} /> Add Project
@@ -433,7 +460,22 @@ export default function AdminDashboard() {
                     <h1 className="font-heading text-3xl font-light tracking-wide mt-1">Manage Projects</h1>
                   </div>
                   <button
-                    onClick={() => setShowAddModal(true)}
+                    onClick={() => {
+                      setNewProject({
+                        id: "",
+                        name: "",
+                        category: "Residential",
+                        location: "",
+                        area: "",
+                        year: "",
+                        description: "",
+                        heroImage: "",
+                        galleryUrls: "",
+                      });
+                      setIsEditing(false);
+                      setEditingProjectId(null);
+                      setShowAddModal(true);
+                    }}
                     className="bg-[#B08D57] hover:bg-[#B08D57]/90 text-white text-xs tracking-wider uppercase font-bold py-3 px-6 flex items-center gap-2 cursor-pointer shadow-sm"
                   >
                     <Plus size={16} />
@@ -468,7 +510,29 @@ export default function AdminDashboard() {
                           <td className="py-3 px-6">{project.location}</td>
                           <td className="py-3 px-6">{project.area}</td>
                           <td className="py-3 px-6 font-mono text-stone-500">{project.year}</td>
-                          <td className="py-3 px-6 text-right">
+                          <td className="py-3 px-6 text-right flex justify-end gap-1">
+                            <button
+                              onClick={() => {
+                                setNewProject({
+                                  id: project.id,
+                                  name: project.name,
+                                  category: project.category,
+                                  location: project.location,
+                                  area: project.area,
+                                  year: project.year,
+                                  description: project.description || "",
+                                  heroImage: project.heroImage,
+                                  galleryUrls: project.gallery ? project.gallery.join(",") : "",
+                                });
+                                setIsEditing(true);
+                                setEditingProjectId(project.id);
+                                setShowAddModal(true);
+                              }}
+                              className="text-stone-400 hover:text-[#B08D57] p-2 transition-colors cursor-pointer"
+                              title="Edit Project"
+                            >
+                              <Edit size={16} />
+                            </button>
                             <button
                               onClick={() => handleDeleteProject(project.id, project.name)}
                               className="text-stone-400 hover:text-red-500 p-2 transition-colors cursor-pointer"
@@ -577,8 +641,12 @@ export default function AdminDashboard() {
             {/* Header */}
             <div className="flex justify-between items-start border-b border-stone-100 pb-4 mb-6">
               <div>
-                <h3 className="font-heading text-2xl text-stone-800 font-light">New Portfolio Showcase</h3>
-                <p className="text-[10px] text-stone-400 uppercase tracking-widest mt-1">Submit coordinates directly to database</p>
+                <h3 className="font-heading text-2xl text-stone-800 font-light">
+                  {isEditing ? "Edit Portfolio Showcase" : "New Portfolio Showcase"}
+                </h3>
+                <p className="text-[10px] text-stone-400 uppercase tracking-widest mt-1">
+                  {isEditing ? "Modify coordinates in database" : "Submit coordinates directly to database"}
+                </p>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
@@ -614,7 +682,10 @@ export default function AdminDashboard() {
                     onChange={(e) => setNewProject(prev => ({ ...prev, id: e.target.value }))}
                     placeholder="e.g. villa-residence"
                     required
-                    className="w-full border border-stone-200 p-3 bg-stone-50 focus:bg-white focus:border-[#B08D57] outline-none transition-colors"
+                    disabled={isEditing}
+                    className={`w-full border border-stone-200 p-3 bg-stone-50 focus:bg-white focus:border-[#B08D57] outline-none transition-colors ${
+                      isEditing ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                   />
                 </div>
                 {/* Name */}
@@ -755,7 +826,7 @@ export default function AdminDashboard() {
                   disabled={isSubmitting}
                   className="bg-[#B08D57] hover:bg-[#B08D57]/90 disabled:bg-[#B08D57]/50 text-white py-3 px-6 text-xs tracking-wider uppercase font-semibold cursor-pointer flex items-center justify-center"
                 >
-                  {isSubmitting ? "Publishing..." : "Publish Project"}
+                  {isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Publish Project"}
                 </button>
               </div>
             </form>
