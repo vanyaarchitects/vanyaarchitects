@@ -4,6 +4,10 @@
 -- https://supabase.com/dashboard/project/_/sql
 -- ==========================================
 
+-- MIGRATION NOTE FOR EXISTING DATABASE:
+-- If your database is already created, run only this line to add the priority column:
+-- ALTER TABLE projects ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0 NOT NULL;
+
 -- 1. Create Projects Table
 CREATE TABLE IF NOT EXISTS projects (
   id TEXT PRIMARY KEY,
@@ -15,6 +19,7 @@ CREATE TABLE IF NOT EXISTS projects (
   description TEXT,
   "heroImage" TEXT NOT NULL,
   gallery TEXT[] NOT NULL,
+  priority INTEGER DEFAULT 0 NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

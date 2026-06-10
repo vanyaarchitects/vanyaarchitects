@@ -53,6 +53,7 @@ export default function AdminDashboard() {
     description: "",
     heroImage: "",
     galleryUrls: "", // Comma-separated
+    priority: 0,
   });
 
   useEffect(() => {
@@ -117,6 +118,14 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleRemoveGalleryImage = (indexToRemove: number) => {
+    setNewProject(prev => {
+      const urls = prev.galleryUrls ? prev.galleryUrls.split(",") : [];
+      const updatedUrls = urls.filter((_, index) => index !== indexToRemove);
+      return { ...prev, galleryUrls: updatedUrls.join(",") };
+    });
+  };
+
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
@@ -152,6 +161,7 @@ export default function AdminDashboard() {
         description: newProject.description,
         heroImage: newProject.heroImage,
         gallery: galleryArray,
+        priority: Number(newProject.priority) || 0,
       };
 
       if (isEditing && editingProjectId) {
@@ -172,6 +182,7 @@ export default function AdminDashboard() {
         description: "",
         heroImage: "",
         galleryUrls: "",
+        priority: 0,
       });
       setIsEditing(false);
       setEditingProjectId(null);
@@ -424,6 +435,7 @@ export default function AdminDashboard() {
                             description: "",
                             heroImage: "",
                             galleryUrls: "",
+                            priority: 0,
                           });
                           setIsEditing(false);
                           setEditingProjectId(null);
@@ -471,6 +483,7 @@ export default function AdminDashboard() {
                         description: "",
                         heroImage: "",
                         galleryUrls: "",
+                        priority: 0,
                       });
                       setIsEditing(false);
                       setEditingProjectId(null);
@@ -523,6 +536,7 @@ export default function AdminDashboard() {
                                   description: project.description || "",
                                   heroImage: project.heroImage,
                                   galleryUrls: project.gallery ? project.gallery.join(",") : "",
+                                  priority: project.priority || 0,
                                 });
                                 setIsEditing(true);
                                 setEditingProjectId(project.id);
@@ -732,7 +746,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Scale / Area */}
                 <div className="space-y-1">
                   <label className="text-[9px] tracking-widest uppercase text-stone-400 font-semibold">Scale / Build Area</label>
@@ -752,6 +766,17 @@ export default function AdminDashboard() {
                     value={newProject.year}
                     onChange={(e) => setNewProject(prev => ({ ...prev, year: e.target.value }))}
                     placeholder="e.g. 2025"
+                    className="w-full border border-stone-200 p-3 bg-stone-50 focus:bg-white focus:border-[#B08D57] outline-none transition-colors"
+                  />
+                </div>
+                {/* Priority */}
+                <div className="space-y-1">
+                  <label className="text-[9px] tracking-widest uppercase text-stone-400 font-semibold">Priority / Sort Index</label>
+                  <input
+                    type="number"
+                    value={newProject.priority}
+                    onChange={(e) => setNewProject(prev => ({ ...prev, priority: parseInt(e.target.value) || 0 }))}
+                    placeholder="e.g. 10 (high) or -5 (low)"
                     className="w-full border border-stone-200 p-3 bg-stone-50 focus:bg-white focus:border-[#B08D57] outline-none transition-colors"
                   />
                 </div>
@@ -803,8 +828,16 @@ export default function AdminDashboard() {
                   {newProject.galleryUrls && (
                     <div className="flex flex-wrap gap-2 mt-2 max-h-16 overflow-y-auto">
                       {newProject.galleryUrls.split(",").map((url, i) => (
-                        <div key={i} className="relative w-12 h-8 border border-stone-200 overflow-hidden">
+                        <div key={i} className="relative w-12 h-8 border border-stone-200 overflow-hidden group">
                           <img src={url} alt="Gallery Preview" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveGalleryImage(i)}
+                            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] transition-opacity duration-200 cursor-pointer"
+                            title="Remove image"
+                          >
+                            ✕
+                          </button>
                         </div>
                       ))}
                     </div>

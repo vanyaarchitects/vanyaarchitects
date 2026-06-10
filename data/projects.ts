@@ -8,6 +8,7 @@ export interface Project {
   description: string;
   heroImage: string;
   gallery: string[];
+  priority?: number;
 }
 
 export const projects: Project[] = [

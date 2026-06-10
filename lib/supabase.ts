@@ -33,9 +33,25 @@ export async function getDbProjects(): Promise<Project[]> {
     const { data, error } = await supabase
       .from("projects")
       .select("*")
+      .order("priority", { ascending: false })
       .order("created_at", { ascending: false });
 
     if (error) {
+      // If priority column doesn't exist, fallback to created_at
+      if (error.code === "42703") {
+        console.warn("Priority column not found in database. Falling back to created_at sorting.");
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("projects")
+          .select("*")
+          .order("created_at", { ascending: false });
+        
+        if (fallbackError) {
+          console.error("Error fetching projects from Supabase (fallback):", fallbackError.message);
+          return staticProjects;
+        }
+        return fallbackData as Project[];
+      }
+      
       console.error("Error fetching projects from Supabase:", error.message);
       return staticProjects;
     }
