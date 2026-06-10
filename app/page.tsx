@@ -72,6 +72,7 @@ export default function HomePage() {
   const [maxFrame, setMaxFrame] = useState(1);
   const [isPreloaded, setIsPreloaded] = useState(false);
   const [projectsList, setProjectsList] = useState<Project[]>(staticProjects);
+  const [isMobile, setIsMobile] = useState(false);
   const totalFrames = 152;
 
   useEffect(() => {
@@ -80,9 +81,22 @@ export default function HomePage() {
     });
   }, []);
 
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   useEffect(() => {
     let isCancelled = false;
     const preloadImages: HTMLImageElement[] = [];
+    
+    // On mobile, load only every 3rd frame (51 frames total) to save bandwidth and speed up load
+    const step = isMobile ? 3 : 1;
 
     const loadFrame = (index: number) => {
       if (isCancelled || index > totalFrames) return;
@@ -93,44 +107,45 @@ export default function HomePage() {
       img.onload = () => {
         if (isCancelled) return;
         
-        // Start animation once the first 30 frames are ready
-        if (index === 30) {
+        // Start animation once first batch is ready
+        const threshold = isMobile ? 10 : 30;
+        if (index >= threshold && !isPreloaded) {
           setIsPreloaded(true);
-          setMaxFrame(30);
-        } else if (index > 30) {
-          // Increment the loop limit progressively in batches of 10 to reduce re-renders
-          if (index % 10 === 0 || index === totalFrames) {
+          setMaxFrame(index);
+        } else if (index > threshold) {
+          if (index % (step * 5) === 0 || index >= totalFrames - step) {
             setMaxFrame(index);
           }
         }
         
-        loadFrame(index + 1);
+        loadFrame(index + step);
       };
       
       img.onerror = () => {
         if (isCancelled) return;
-        // Skip frame on load failure to prevent halting the queue
-        loadFrame(index + 1);
+        loadFrame(index + step);
       };
       
       preloadImages.push(img);
     };
 
-    // Begin sequential queue loading from frame 1
     loadFrame(1);
 
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     if (!isPreloaded) return;
+    
+    const step = isMobile ? 3 : 1;
+    const intervalTime = isMobile ? 90 : 40; // Play at correct pace on mobile (fewer frames)
 
     const interval = setInterval(() => {
       setFrame((prev) => {
         if (prev < maxFrame) {
-          return prev + 1;
+          return prev + step;
         } else if (prev >= totalFrames) {
           clearInterval(interval);
           return prev;
@@ -138,10 +153,10 @@ export default function HomePage() {
           return prev;
         }
       });
-    }, 40); // 25 FPS (40ms interval)
+    }, intervalTime);
 
     return () => clearInterval(interval);
-  }, [isPreloaded, maxFrame]);
+  }, [isPreloaded, maxFrame, isMobile]);
 
   // Take the first 4 projects for the Featured Projects section
   const featuredProjects = projectsList.slice(0, 4);
@@ -157,11 +172,11 @@ export default function HomePage() {
             alt="Vanya Luxury Architecture Hero Background"
             className="w-full h-full object-cover scale-102 select-none"
           />
-          <div className="absolute inset-0 bg-black/55" />
+          <div className="absolute inset-0 bg-black/60" />
         </div>
 
-        {/* Custom Watermark SVG Overlay */}
-        <div className="absolute inset-0 z-1 pointer-events-none flex items-center justify-center select-none overflow-hidden">
+        {/* Custom Watermark SVG Overlay (Hidden on Mobile) */}
+        <div className="absolute inset-0 z-1 pointer-events-none hidden md:flex items-center justify-center select-none overflow-hidden">
           <svg
             width="1534"
             height="1024"
@@ -183,12 +198,12 @@ export default function HomePage() {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full text-center flex flex-col items-center justify-center mt-20">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full text-center flex flex-col items-center justify-center mt-12 md:mt-20">
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-            className="font-sans font-extralight text-4xl sm:text-6xl md:text-8xl text-white tracking-wide leading-[1.15] max-w-5xl"
+            className="font-sans font-extralight text-3xl sm:text-6xl md:text-8xl text-white tracking-wide leading-[1.15] max-w-5xl"
           >
             Where Nature Meets <br />
             High Design.
@@ -197,7 +212,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-xs sm:text-sm md:text-base text-white/80 tracking-[0.15em] font-light max-w-4xl mt-8 mb-12 leading-relaxed"
+            className="text-xs sm:text-sm md:text-base text-white/80 tracking-[0.15em] font-light max-w-4xl mt-4 mb-8 md:mt-8 md:mb-12 leading-relaxed"
           >
             We don’t just design spaces—we curate environments where luxury breathes. <br className="hidden md:inline" />
             VANYA blends avant-garde architecture with organic elements, shaping <br className="hidden md:inline" />
@@ -207,17 +222,17 @@ export default function HomePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 0.7 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-6 w-full max-w-2xl"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 w-full max-w-2xl"
           >
             <Link
               href="/contact"
-              className="w-full sm:w-auto min-w-[240px] px-8 py-4 bg-transparent hover:bg-white/10 border border-white/60 hover:border-white text-white text-xs tracking-[0.25em] uppercase transition-all duration-300 text-center font-medium"
+              className="w-full sm:w-auto min-w-[240px] px-8 py-3.5 md:py-4 bg-transparent hover:bg-white/10 border border-white/60 hover:border-white text-white text-xs tracking-[0.25em] uppercase transition-all duration-300 text-center font-medium"
             >
               Commission a Design
             </Link>
             <Link
               href="/projects"
-              className="relative w-full sm:w-auto min-w-[240px] px-8 py-4 bg-transparent hover:bg-white/10 border border-white/60 hover:border-white text-white text-xs tracking-[0.25em] uppercase transition-all duration-300 text-center font-medium flex flex-col items-center justify-center group"
+              className="relative w-full sm:w-auto min-w-[240px] px-8 py-3.5 md:py-4 bg-transparent hover:bg-white/10 border border-white/60 hover:border-white text-white text-xs tracking-[0.25em] uppercase transition-all duration-300 text-center font-medium flex flex-col items-center justify-center group"
             >
               <span>View Projects</span>
               <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/40 tracking-[0.1em] font-light transition-opacity group-hover:text-white/70">
@@ -227,12 +242,12 @@ export default function HomePage() {
           </motion.div>
         </div>
 
-        {/* Scroll Indicator */}
+        {/* Scroll Indicator (Hidden on Mobile for cleaner viewport) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center cursor-pointer"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hidden sm:flex flex-col items-center cursor-pointer"
           onClick={() => window.scrollTo({ top: window.innerHeight, behavior: "smooth" })}
         >
           <span className="text-[9px] tracking-[0.3em] uppercase text-white/50 mb-2 font-light">
