@@ -52,7 +52,7 @@ export default function AdminDashboard() {
     year: "",
     description: "",
     heroImage: "",
-    galleryUrls: "", // Comma-separated
+    galleryUrls: [] as string[],
     priority: 0,
   });
 
@@ -87,43 +87,92 @@ export default function AdminDashboard() {
     router.push("/admin/login");
   };
 
-  // Convert File upload to Base64 String for easy storing
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: "heroImage" | "gallery") => {
+  // Client-side image compression to prevent large database payload timeouts
+  const compressAndEncodeImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.75): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!file.type.startsWith("image/")) {
+        // Fallback for PDFs or other documents (e.g. Sreerakha PDFs)
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new window.Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          // Downscale if image dimensions exceed constraints
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Could not get canvas context"));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = () => reject(new Error("Failed to load image into memory"));
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error("Failed to read image file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Convert File upload to Base64 String for easy storing with compression
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: "heroImage" | "gallery") => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    setFormError("");
+
     if (field === "heroImage") {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setNewProject(prev => ({ ...prev, heroImage: reader.result as string }));
-      };
-      reader.readAsDataURL(files[0]);
+      try {
+        const compressedBase64 = await compressAndEncodeImage(files[0]);
+        setNewProject(prev => ({ ...prev, heroImage: compressedBase64 }));
+      } catch (err: any) {
+        setFormError("Failed to process Hero Image: " + err.message);
+      }
     } else {
       // Gallery Multiple
-      const base64Promises = Array.from(files).map((file) => {
-        return new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        });
-      });
-
-      Promise.all(base64Promises).then((results) => {
-        setNewProject(prev => {
-          const current = prev.galleryUrls ? prev.galleryUrls.split(",") : [];
-          const combined = [...current, ...results].filter(Boolean);
-          return { ...prev, galleryUrls: combined.join(",") };
-        });
-      });
+      try {
+        const promises = Array.from(files).map((file) => compressAndEncodeImage(file));
+        const results = await Promise.all(promises);
+        setNewProject(prev => ({
+          ...prev,
+          galleryUrls: [...prev.galleryUrls, ...results]
+        }));
+      } catch (err: any) {
+        setFormError("Failed to process Gallery Images: " + err.message);
+      }
     }
   };
 
   const handleRemoveGalleryImage = (indexToRemove: number) => {
-    setNewProject(prev => {
-      const urls = prev.galleryUrls ? prev.galleryUrls.split(",") : [];
-      const updatedUrls = urls.filter((_, index) => index !== indexToRemove);
-      return { ...prev, galleryUrls: updatedUrls.join(",") };
-    });
+    setNewProject(prev => ({
+      ...prev,
+      galleryUrls: prev.galleryUrls.filter((_, index) => index !== indexToRemove)
+    }));
   };
 
   const handleCreateProject = async (e: React.FormEvent) => {
@@ -147,8 +196,8 @@ export default function AdminDashboard() {
     const formattedId = newProject.id.toLowerCase().replace(/\s+/g, "-");
 
     try {
-      const galleryArray = newProject.galleryUrls
-        ? newProject.galleryUrls.split(",").map(url => url.trim()).filter(Boolean)
+      const galleryArray = newProject.galleryUrls.length > 0
+        ? newProject.galleryUrls
         : [newProject.heroImage]; // Default to heroImage if empty
 
       const projectData = {
@@ -181,7 +230,7 @@ export default function AdminDashboard() {
         year: "",
         description: "",
         heroImage: "",
-        galleryUrls: "",
+        galleryUrls: [],
         priority: 0,
       });
       setIsEditing(false);
@@ -434,7 +483,7 @@ export default function AdminDashboard() {
                             year: "",
                             description: "",
                             heroImage: "",
-                            galleryUrls: "",
+                            galleryUrls: [],
                             priority: 0,
                           });
                           setIsEditing(false);
@@ -482,7 +531,7 @@ export default function AdminDashboard() {
                         year: "",
                         description: "",
                         heroImage: "",
-                        galleryUrls: "",
+                        galleryUrls: [],
                         priority: 0,
                       });
                       setIsEditing(false);
@@ -496,6 +545,54 @@ export default function AdminDashboard() {
                   </button>
                 </div>
 
+                {/* Priority Showcase Tracker Panel */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#1C1C1C] text-white p-6 border border-[#B08D57]/30 shadow-md">
+                  <div>
+                    <h3 className="text-xs uppercase tracking-widest text-[#B08D57] font-bold mb-3 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                      First 5 Showcase (Top Featured)
+                    </h3>
+                    <div className="space-y-2">
+                      {projectsList.slice(0, 5).map((project, idx) => (
+                        <div key={project.id} className="flex items-center justify-between bg-stone-900 p-2.5 text-xs border-l-2 border-[#B08D57]">
+                          <div className="flex items-center gap-2 truncate">
+                            <span className="text-[10px] text-stone-500 font-mono">#{idx + 1}</span>
+                            <span className="font-semibold truncate">{project.name}</span>
+                          </div>
+                          <span className="text-[10px] bg-[#B08D57]/20 text-[#B08D57] px-2 py-0.5 font-mono">
+                            Priority: {project.priority ?? 0}
+                          </span>
+                        </div>
+                      ))}
+                      {projectsList.length === 0 && (
+                        <p className="text-xs text-stone-500 italic py-2">No projects available.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs uppercase tracking-widest text-red-400 font-bold mb-3 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                      Hidden / Bottom Projects (Priority &lt; 0)
+                    </h3>
+                    <div className="space-y-2">
+                      {projectsList.filter(p => (p.priority ?? 0) < 0).map((project) => (
+                        <div key={project.id} className="flex items-center justify-between bg-stone-900 p-2.5 text-xs border-l-2 border-red-500/50">
+                          <span className="font-semibold truncate text-stone-300">{project.name}</span>
+                          <span className="text-[10px] bg-red-500/15 text-red-400 px-2 py-0.5 font-mono">
+                            Priority: {project.priority ?? 0} (Hidden)
+                          </span>
+                        </div>
+                      ))}
+                      {projectsList.filter(p => (p.priority ?? 0) < 0).length === 0 && (
+                        <div className="text-xs text-stone-500 italic py-4 text-center border border-dashed border-stone-800 bg-stone-900/30">
+                          No hidden projects. Set priority below 0 to hide.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 {/* List Table of Projects */}
                 <div className="bg-white border border-stone-200 shadow-sm overflow-hidden">
                   <table className="w-full text-left border-collapse">
@@ -507,6 +604,7 @@ export default function AdminDashboard() {
                         <th className="py-4 px-6 font-semibold">Location</th>
                         <th className="py-4 px-6 font-semibold">Scale</th>
                         <th className="py-4 px-6 font-semibold">Year</th>
+                        <th className="py-4 px-6 font-semibold">Priority</th>
                         <th className="py-4 px-6 font-semibold text-right">Action</th>
                       </tr>
                     </thead>
@@ -523,6 +621,17 @@ export default function AdminDashboard() {
                           <td className="py-3 px-6">{project.location}</td>
                           <td className="py-3 px-6">{project.area}</td>
                           <td className="py-3 px-6 font-mono text-stone-500">{project.year}</td>
+                          <td className="py-3 px-6">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                              (project.priority ?? 0) > 0 
+                                ? "bg-green-50 text-green-700 border border-green-200" 
+                                : (project.priority ?? 0) < 0 
+                                ? "bg-red-50 text-red-700 border border-red-200" 
+                                : "bg-stone-50 text-stone-600 border border-stone-200"
+                            }`}>
+                              {project.priority ?? 0}
+                            </span>
+                          </td>
                           <td className="py-3 px-6 text-right flex justify-end gap-1">
                             <button
                               onClick={() => {
@@ -535,8 +644,8 @@ export default function AdminDashboard() {
                                   year: project.year,
                                   description: project.description || "",
                                   heroImage: project.heroImage,
-                                  galleryUrls: project.gallery ? project.gallery.join(",") : "",
-                                  priority: project.priority || 0,
+                                  galleryUrls: project.gallery || [],
+                                  priority: project.priority ?? 0,
                                 });
                                 setIsEditing(true);
                                 setEditingProjectId(project.id);
@@ -806,8 +915,16 @@ export default function AdminDashboard() {
                     className="block w-full text-[10px] text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-[10px] file:font-semibold file:bg-stone-100 file:text-[#B08D57] hover:file:bg-[#B08D57]/10 cursor-pointer"
                   />
                   {newProject.heroImage && (
-                    <div className="relative w-24 h-16 border border-stone-200 overflow-hidden mt-2">
+                    <div className="relative w-24 h-16 border border-stone-200 overflow-hidden mt-2 group">
                       <img src={newProject.heroImage} alt="Hero Preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setNewProject(prev => ({ ...prev, heroImage: "" }))}
+                        className="absolute top-1 right-1 bg-stone-900/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center transition-colors cursor-pointer text-[10px] z-10"
+                        title="Remove hero image"
+                      >
+                        ✕
+                      </button>
                     </div>
                   )}
                 </div>
@@ -825,15 +942,15 @@ export default function AdminDashboard() {
                   <p className="text-[9px] text-stone-400 mt-1">You can upload multiple files at once.</p>
                   
                   {/* Gallery previews */}
-                  {newProject.galleryUrls && (
-                    <div className="flex flex-wrap gap-2 mt-2 max-h-16 overflow-y-auto">
-                      {newProject.galleryUrls.split(",").map((url, i) => (
-                        <div key={i} className="relative w-12 h-8 border border-stone-200 overflow-hidden group">
+                  {newProject.galleryUrls && newProject.galleryUrls.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2 max-h-24 overflow-y-auto border border-stone-100 p-2 bg-stone-50">
+                      {newProject.galleryUrls.map((url, i) => (
+                        <div key={i} className="relative w-16 h-12 border border-stone-200 overflow-hidden">
                           <img src={url} alt="Gallery Preview" className="w-full h-full object-cover" />
                           <button
                             type="button"
                             onClick={() => handleRemoveGalleryImage(i)}
-                            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] transition-opacity duration-200 cursor-pointer"
+                            className="absolute top-0.5 right-0.5 bg-stone-900/80 hover:bg-red-600 text-white rounded-full w-4.5 h-4.5 flex items-center justify-center transition-colors cursor-pointer text-[8px] leading-none z-10"
                             title="Remove image"
                           >
                             ✕

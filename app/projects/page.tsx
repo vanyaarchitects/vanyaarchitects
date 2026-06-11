@@ -35,8 +35,11 @@ export default function ProjectsPage() {
     });
   }, []);
 
-  // Filter projects based on selected category
+  // Filter projects based on selected category and visibility
   const filteredProjects = projectsList.filter((project) => {
+    // Exclude projects with negative priority from the front-end
+    if ((project.priority ?? 0) < 0) return false;
+
     if (selectedCategory === "All") return true;
     // Handle plural mapping if category is named slightly differently
     if (selectedCategory === "Urban Concepts") return project.category === "Urban Concepts";
@@ -353,24 +356,28 @@ export default function ProjectsPage() {
                 </div>
 
                 {/* Project Gallery Grid */}
-                <div className="border-t border-border pt-12 mb-8">
-                  <h3 className="font-heading text-2xl text-foreground font-light tracking-wide mb-8">
-                    Interior & Detail Studies
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {selectedProject.gallery.map((imgUrl, i) => (
-                      <div key={i} className="relative aspect-[4/3] w-full overflow-hidden bg-border group">
-                        <Image
-                          src={imgUrl}
-                          alt={`${selectedProject.name} detail view ${i + 1}`}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 400px"
-                          className="object-cover transition-transform duration-500 group-hover:scale-102"
-                        />
-                      </div>
-                    ))}
+                {selectedProject.gallery && 
+                 selectedProject.gallery.length > 0 && 
+                 !(selectedProject.gallery.length === 1 && selectedProject.gallery[0] === selectedProject.heroImage) && (
+                  <div className="border-t border-border pt-12 mb-8">
+                    <h3 className="font-heading text-2xl text-foreground font-light tracking-wide mb-8">
+                      Interior & Detail Studies
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {selectedProject.gallery.map((imgUrl, i) => (
+                        <div key={i} className="relative aspect-[4/3] w-full overflow-hidden bg-border group">
+                          <Image
+                            src={imgUrl}
+                            alt={`${selectedProject.name} detail view ${i + 1}`}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 400px"
+                            className="object-cover transition-transform duration-500 group-hover:scale-102"
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Bottom Drawer Control */}

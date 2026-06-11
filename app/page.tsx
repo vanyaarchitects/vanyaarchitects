@@ -158,8 +158,8 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [isPreloaded, maxFrame, isMobile]);
 
-  // Take the first 4 projects for the Featured Projects section
-  const featuredProjects = projectsList.slice(0, 4);
+  // Take the first 4 visible projects (priority >= 0) for the Featured Projects section
+  const featuredProjects = projectsList.filter((p) => (p.priority ?? 0) >= 0).slice(0, 4);
 
   return (
     <div className="w-full">

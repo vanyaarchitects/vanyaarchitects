@@ -74,13 +74,41 @@ export async function insertDbProject(project: Omit<Project, "created_at">) {
     throw new Error("Supabase is not configured.");
   }
 
-  const { data, error } = await supabase
-    .from("projects")
-    .insert([project])
-    .select();
+  try {
+    const { data, error } = await supabase
+      .from("projects")
+      .insert([project])
+      .select();
 
-  if (error) throw error;
-  return data;
+    if (error) {
+      // If priority column doesn't exist, retry without priority
+      if (error.code === "42703" || error.message.includes("priority")) {
+        console.warn("Priority column not found in database. Retrying project insert without priority.");
+        const { priority, ...projectWithoutPriority } = project;
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("projects")
+          .insert([projectWithoutPriority])
+          .select();
+        
+        if (fallbackError) throw fallbackError;
+        return fallbackData;
+      }
+      throw error;
+    }
+    return data;
+  } catch (err: any) {
+    // Catch generic exceptions/network errors and check if it's due to priority column
+    if (err.message && err.message.includes("priority")) {
+      const { priority, ...projectWithoutPriority } = project;
+      const { data, error } = await supabase
+        .from("projects")
+        .insert([projectWithoutPriority])
+        .select();
+      if (error) throw error;
+      return data;
+    }
+    throw err;
+  }
 }
 
 // Helper to update a project
@@ -89,14 +117,43 @@ export async function updateDbProject(id: string, project: Partial<Project>) {
     throw new Error("Supabase is not configured.");
   }
 
-  const { data, error } = await supabase
-    .from("projects")
-    .update(project)
-    .eq("id", id)
-    .select();
+  try {
+    const { data, error } = await supabase
+      .from("projects")
+      .update(project)
+      .eq("id", id)
+      .select();
 
-  if (error) throw error;
-  return data;
+    if (error) {
+      // If priority column doesn't exist, retry without priority
+      if (error.code === "42703" || error.message.includes("priority")) {
+        console.warn("Priority column not found in database. Retrying project update without priority.");
+        const { priority, ...projectWithoutPriority } = project;
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("projects")
+          .update(projectWithoutPriority)
+          .eq("id", id)
+          .select();
+        
+        if (fallbackError) throw fallbackError;
+        return fallbackData;
+      }
+      throw error;
+    }
+    return data;
+  } catch (err: any) {
+    if (err.message && err.message.includes("priority")) {
+      const { priority, ...projectWithoutPriority } = project;
+      const { data, error } = await supabase
+        .from("projects")
+        .update(projectWithoutPriority)
+        .eq("id", id)
+        .select();
+      if (error) throw error;
+      return data;
+    }
+    throw err;
+  }
 }
 
 // Helper to delete a project
