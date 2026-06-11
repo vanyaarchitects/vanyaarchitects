@@ -42,6 +42,8 @@ export default function AdminDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [areaValue, setAreaValue] = useState("");
+  const [areaUnit, setAreaUnit] = useState("sq.ft");
   
   const [newProject, setNewProject] = useState({
     id: "",
@@ -200,12 +202,13 @@ export default function AdminDashboard() {
         ? newProject.galleryUrls
         : [newProject.heroImage]; // Default to heroImage if empty
 
+      const formattedArea = areaValue.trim() ? `${areaValue.trim()} ${areaUnit}` : "N/A";
       const projectData = {
         id: formattedId,
         name: newProject.name,
         category: newProject.category,
         location: newProject.location,
-        area: newProject.area || "N/A",
+        area: formattedArea,
         year: newProject.year || new Date().getFullYear().toString(),
         description: newProject.description,
         heroImage: newProject.heroImage,
@@ -233,6 +236,8 @@ export default function AdminDashboard() {
         galleryUrls: [],
         priority: 0,
       });
+      setAreaValue("");
+      setAreaUnit("sq.ft");
       setIsEditing(false);
       setEditingProjectId(null);
       
@@ -486,6 +491,8 @@ export default function AdminDashboard() {
                             galleryUrls: [],
                             priority: 0,
                           });
+                          setAreaValue("");
+                          setAreaUnit("sq.ft");
                           setIsEditing(false);
                           setEditingProjectId(null);
                           setShowAddModal(true);
@@ -534,6 +541,8 @@ export default function AdminDashboard() {
                         galleryUrls: [],
                         priority: 0,
                       });
+                      setAreaValue("");
+                      setAreaUnit("sq.ft");
                       setIsEditing(false);
                       setEditingProjectId(null);
                       setShowAddModal(true);
@@ -635,6 +644,16 @@ export default function AdminDashboard() {
                           <td className="py-3 px-6 text-right flex justify-end gap-1">
                             <button
                               onClick={() => {
+                                const areaStr = project.area || "";
+                                let val = "";
+                                let unit = "sq.ft";
+                                if (areaStr && areaStr !== "N/A") {
+                                  const parts = areaStr.split(" ");
+                                  val = parts[0] || "";
+                                  unit = parts[1] || "sq.ft";
+                                }
+                                setAreaValue(val);
+                                setAreaUnit(unit);
                                 setNewProject({
                                   id: project.id,
                                   name: project.name,
@@ -836,6 +855,8 @@ export default function AdminDashboard() {
                   >
                     <option value="Residential">Residential</option>
                     <option value="Commercial">Commercial</option>
+                    <option value="Interior Design">Interior Design</option>
+                    <option value="Renovation">Renovation</option>
                     <option value="Hospitality">Hospitality</option>
                     <option value="Institutional">Institutional</option>
                     <option value="Urban Concepts">Urban Concepts</option>
@@ -859,13 +880,23 @@ export default function AdminDashboard() {
                 {/* Scale / Area */}
                 <div className="space-y-1">
                   <label className="text-[9px] tracking-widest uppercase text-stone-400 font-semibold">Scale / Build Area</label>
-                  <input
-                    type="text"
-                    value={newProject.area}
-                    onChange={(e) => setNewProject(prev => ({ ...prev, area: e.target.value }))}
-                    placeholder="e.g. 450 m²"
-                    className="w-full border border-stone-200 p-3 bg-stone-50 focus:bg-white focus:border-[#B08D57] outline-none transition-colors"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={areaValue}
+                      onChange={(e) => setAreaValue(e.target.value)}
+                      placeholder="e.g. 3000"
+                      className="w-2/3 border border-stone-200 p-3 bg-stone-50 focus:bg-white focus:border-[#B08D57] outline-none transition-colors"
+                    />
+                    <select
+                      value={areaUnit}
+                      onChange={(e) => setAreaUnit(e.target.value)}
+                      className="w-1/3 border border-stone-200 p-3 bg-stone-50 focus:bg-white focus:border-[#B08D57] outline-none transition-colors"
+                    >
+                      <option value="sq.ft">sq.ft</option>
+                      <option value="m²">m²</option>
+                    </select>
+                  </div>
                 </div>
                 {/* Year */}
                 <div className="space-y-1">

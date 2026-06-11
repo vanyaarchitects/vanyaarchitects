@@ -393,6 +393,7 @@ export default function HomePage() {
                     key={service.id}
                     className="border-b border-border py-6 transition-all duration-300 cursor-pointer"
                     onClick={() => setActiveService(isOpen ? null : index)}
+                    onMouseEnter={() => setActiveService(index)}
                   >
                     <div className="flex justify-between items-center">
                       <h3 className="font-heading text-xl md:text-2xl text-foreground font-light tracking-wide">

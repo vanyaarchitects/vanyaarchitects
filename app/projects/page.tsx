@@ -7,7 +7,6 @@ import { X, ArrowUpRight, Maximize2, Grid, List } from "lucide-react";
 import { projects as staticProjects, Project } from "@/data/projects";
 import { getDbProjects } from "@/lib/supabase";
 
-const categories = ["All", "Residential", "Commercial", "Hospitality", "Institutional", "Urban Concepts"];
 
 export default function ProjectsPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -15,6 +14,34 @@ export default function ProjectsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [hoveredProject, setHoveredProject] = useState<Project | null>(null);
   const [projectsList, setProjectsList] = useState<Project[]>(staticProjects);
+
+  // Dynamically compute active categories that contain visible projects
+  const activeCategories = React.useMemo(() => {
+    const categoriesSet = new Set<string>();
+    categoriesSet.add("All"); // Always include "All"
+
+    projectsList.forEach((project) => {
+      // Only check visible projects (priority >= 0)
+      if ((project.priority ?? 0) >= 0) {
+        categoriesSet.add(project.category);
+      }
+    });
+
+    // Define preferred display order
+    const preferredOrder = [
+      "All",
+      "Residential",
+      "Commercial",
+      "Interior Design",
+      "Renovation",
+      "Hospitality",
+      "Institutional",
+      "Urban Concepts"
+    ];
+
+    // Filter order list to keep only active categories
+    return preferredOrder.filter((cat) => categoriesSet.has(cat));
+  }, [projectsList]);
 
   // Motion values for cursor-following image reveal
   const listX = useMotionValue(0);
@@ -88,7 +115,7 @@ export default function ProjectsPage() {
         {/* Category Filters & View Toggle */}
         <div className="border-b border-border pb-6 mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-x-auto whitespace-nowrap scrollbar-none">
           <div className="flex justify-start items-center space-x-8 md:space-x-12">
-            {categories.map((category) => (
+            {activeCategories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
