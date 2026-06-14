@@ -182,28 +182,30 @@ export default function Footer() {
             <div className="h-[0.5px] bg-[#B08D57]/30 flex-grow"></div>
           </div>
           
-          <div className="flex items-center gap-4 mb-8">
+          <div className="relative mb-8 flex flex-col items-center">
             {/* SVG Logo - High-fidelity geometric representation of Meleparambil M logo */}
-            <svg 
-              viewBox="0 0 100 100" 
-              className="w-10 h-10 text-[#B08D57]" 
-              fill="currentColor"
-            >
-              {/* Left Stem (Outer) */}
-              <path d="M15 15 L22 20 L22 85 L15 80 Z" />
-              {/* Left Stem (Inner) */}
-              <path d="M26 22 L33 27 L33 55 L26 48 Z" />
-              {/* Left Diagonal */}
-              <path d="M37 15 L44 15 L50 65 L43 65 Z" />
-              {/* Right Diagonal */}
-              <path d="M63 15 L56 15 L50 65 L57 65 Z" />
-              {/* Right Stem (Inner) */}
-              <path d="M74 22 L67 27 L67 55 L74 48 Z" />
-              {/* Right Stem (Outer) */}
-              <path d="M85 15 L78 20 L78 85 L85 80 Z" />
-            </svg>
+            <div className="absolute right-full mr-4 md:mr-6 top-1/2 -translate-y-1/2 flex items-center justify-center">
+              <svg 
+                viewBox="0 0 100 100" 
+                className="w-8 h-8 md:w-10 md:h-10 text-[#B08D57]" 
+                fill="currentColor"
+              >
+                {/* Left Stem (Outer) */}
+                <path d="M15 15 L22 20 L22 85 L15 80 Z" />
+                {/* Left Stem (Inner) */}
+                <path d="M26 22 L33 27 L33 55 L26 48 Z" />
+                {/* Left Diagonal */}
+                <path d="M37 15 L44 15 L50 65 L43 65 Z" />
+                {/* Right Diagonal */}
+                <path d="M63 15 L56 15 L50 65 L57 65 Z" />
+                {/* Right Stem (Inner) */}
+                <path d="M74 22 L67 27 L67 55 L74 48 Z" />
+                {/* Right Stem (Outer) */}
+                <path d="M85 15 L78 20 L78 85 L85 80 Z" />
+              </svg>
+            </div>
             
-            <div className="flex flex-col leading-none">
+            <div className="flex flex-col items-center leading-none">
               <span className="font-heading text-xl md:text-2xl tracking-[0.18em] text-white font-light">
                 MELEPARAMBIL
               </span>
