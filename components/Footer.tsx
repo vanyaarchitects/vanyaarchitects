@@ -172,6 +172,52 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* Venture Branding */}
+        <div className="border-t border-[#4E4238]/60 pt-12 pb-4 flex flex-col items-center justify-center">
+          <div className="flex items-center justify-center w-full max-w-sm mb-4">
+            <div className="h-[0.5px] bg-[#B08D57]/30 flex-grow"></div>
+            <span className="text-[9px] tracking-[0.35em] uppercase text-[#B08D57] px-4 font-semibold">
+              A Venture Of
+            </span>
+            <div className="h-[0.5px] bg-[#B08D57]/30 flex-grow"></div>
+          </div>
+          
+          <div className="flex items-center gap-4 mb-8">
+            {/* SVG Logo - High-fidelity geometric representation of Meleparambil M logo */}
+            <svg 
+              viewBox="0 0 100 100" 
+              className="w-10 h-10 text-[#B08D57]" 
+              fill="currentColor"
+            >
+              {/* Left Stem (Outer) */}
+              <path d="M15 15 L22 20 L22 85 L15 80 Z" />
+              {/* Left Stem (Inner) */}
+              <path d="M26 22 L33 27 L33 55 L26 48 Z" />
+              {/* Left Diagonal */}
+              <path d="M37 15 L44 15 L50 65 L43 65 Z" />
+              {/* Right Diagonal */}
+              <path d="M63 15 L56 15 L50 65 L57 65 Z" />
+              {/* Right Stem (Inner) */}
+              <path d="M74 22 L67 27 L67 55 L74 48 Z" />
+              {/* Right Stem (Outer) */}
+              <path d="M85 15 L78 20 L78 85 L85 80 Z" />
+            </svg>
+            
+            <div className="flex flex-col leading-none">
+              <span className="font-heading text-xl md:text-2xl tracking-[0.18em] text-white font-light">
+                MELEPARAMBIL
+              </span>
+              <div className="flex items-center w-full mt-2">
+                <div className="h-[0.5px] bg-[#B08D57]/40 flex-grow"></div>
+                <span className="text-[9px] tracking-[0.45em] uppercase text-[#B08D57] px-2 font-semibold">
+                  GROUP
+                </span>
+                <div className="h-[0.5px] bg-[#B08D57]/40 flex-grow"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Divider */}
         <div className="border-t border-[#4E4238] pt-8 flex flex-col md:flex-row justify-between items-center text-[10px] text-[#C4B7A9] tracking-[0.15em] uppercase font-light">
           <p className="mb-4 md:mb-0">
